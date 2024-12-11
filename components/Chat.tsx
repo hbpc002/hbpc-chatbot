@@ -30,6 +30,8 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
+      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -40,19 +42,38 @@ export default function Chat() {
         }),
       });
 
-      const data = await response.json();
-      
-      if (data.choices?.[0]?.message) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: data.choices[0].message.content,
-          },
-        ]);
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("无法获取响应流");
+      }
+
+      setIsLoading(false);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        const text = decoder.decode(value);
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastMessage = newMessages[newMessages.length - 1];
+          newMessages[newMessages.length - 1] = {
+            ...lastMessage,
+            content: lastMessage.content + text
+          };
+          return newMessages;
+        });
       }
     } catch (error) {
       console.error('Chat error:', error);
+      setMessages((prev) => [...prev, { role: 'assistant', content: '抱歉，发生了错误。' }]);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -87,14 +108,6 @@ export default function Chat() {
             </div>
           </div>
         ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 p-4 rounded-lg max-w-[70%]">
-              <div className="text-xs text-gray-500 mb-1">AI助手</div>
-              <div>正在思考...</div>
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
       
