@@ -6,6 +6,7 @@ import { useChat } from '../hooks/useChat';
 import { motion } from 'framer-motion';
 import { ChatBubbleLeftRightIcon, PencilIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { Session } from '../types/chat';
 
 const Chat: React.FC = () => {
   const {
