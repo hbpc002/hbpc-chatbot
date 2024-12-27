@@ -1,61 +1,37 @@
+import { NextResponse } from 'next/server'
+// import { ZhipuAI } from '@zhipu-ai/sdk'
 import { ZhipuAI } from 'zhipuai';
-
-// 初始化智谱AI客户端
 const client = new ZhipuAI({
-  apiKey: process.env.ZHIPUAI_API_KEY || '', 
-});
+  apiKey: process.env.ZHIPUAI_API_KEY
+})
 
 export async function POST(req: Request) {
   try {
-    // 检查 API Key
-    if (!process.env.ZHIPUAI_API_KEY) {
-      console.error('API Key未设置');
-      return new Response(
-        JSON.stringify({ error: 'API Key未设置' }), 
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const { messages } = await req.json()
 
-    const { messages } = await req.json();
-    
-    // 创建一个 TransformStream
-    const encoder = new TextEncoder();
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
+    const response = await client.chat.completions.create({
+      model: 'glm-4',
+      messages: messages,
+      stream: true,
+      temperature: 0.7,
+    })
 
-    // 异步处理响应
-    (async () => {
-      try {
-        const response = await client.chat.completions.create({
-          model: "glm-4",
-          messages: messages,
-          stream: true,
-        });
-
+    const stream = new ReadableStream({
+      async start(controller) {
         for await (const chunk of response) {
-          const content = chunk.choices[0]?.delta?.content || '';
-          await writer.write(encoder.encode(content));
+          const text = chunk.choices[0]?.delta?.content || ''
+          controller.enqueue(new TextEncoder().encode(text))
         }
-      } catch (error) {
-        console.error('Stream error:', error);
-      } finally {
-        await writer.close();
+        controller.close()
       }
-    })();
+    })
 
-    return new Response(stream.readable, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-      },
-    });
+    return new Response(stream)
   } catch (error) {
-    console.error('请求处理错误:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: '服务器错误', 
-        details: error instanceof Error ? error.message : String(error)
-      }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error('Chat error:', error)
+    return NextResponse.json(
+      { error: 'Error processing chat request' },
+      { status: 500 }
+    )
   }
 } 

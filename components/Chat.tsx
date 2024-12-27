@@ -1,134 +1,133 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Message } from '@/types/chat';
-import ReactMarkdown from 'react-markdown';
+import React, { useEffect } from 'react';
+import { ChatMessage } from './ChatMessage';
+import { useChat } from '../hooks/useChat';
+import { motion } from 'framer-motion';
+import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
-export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+const Chat: React.FC = () => {
+  const {
+    sessions,
+    currentSession,
+    currentSessionId,
+    input,
+    setInput,
+    isLoading,
+    error,
+    inputRef,
+    messagesEndRef,
+    handleSubmit,
+    createSession,
+    deleteSession,
+    setCurrentSession,
+  } = useChat();
 
   useEffect(() => {
-    scrollToBottom();
-    inputRef.current?.focus();
-  }, [messages]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const newMessage: Message = { role: 'user', content: input };
-    setMessages((prev) => [...prev, newMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, newMessage],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error("无法获取响应流");
-      }
-
-      setIsLoading(false);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        const text = decoder.decode(value);
-        setMessages((prev) => {
-          const newMessages = [...prev];
-          const lastMessage = newMessages[newMessages.length - 1];
-          newMessages[newMessages.length - 1] = {
-            ...lastMessage,
-            content: lastMessage.content + text
-          };
-          return newMessages;
-        });
-      }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages((prev) => [...prev, { role: 'assistant', content: '抱歉，发生了错误。' }]);
-    } finally {
-      setIsLoading(false);
-      inputRef.current?.focus();
+    if (!isLoading && inputRef.current) {
+      inputRef.current.focus();
     }
-  };
+  }, [isLoading]);
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+    <main className="grid grid-cols-[280px_1fr] h-screen w-screen overflow-hidden bg-gray-50">
+      {/* 左侧会话列表 - 添加独立滚动 */}
+      <aside className="bg-white border-r border-gray-200 flex flex-col shadow-lg overflow-hidden">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0">
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={createSession}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
           >
-            <div
-              className={`p-4 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-blue-100'
-                  : 'bg-gray-100'
-              } max-w-[80%]`}
+            <ChatBubbleLeftRightIcon className="w-5 h-5" />
+            <span className="font-medium">新建对话</span>
+          </motion.button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300">
+          {sessions.map(session => (
+            <motion.div
+              key={session.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => setCurrentSession(session.id)}
+              className={`group flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all ${
+                session.id === currentSessionId 
+                  ? 'bg-blue-50 text-blue-600' 
+                  : 'hover:bg-gray-50'
+              }`}
             >
-              <div className="text-xs text-gray-500 mb-1">
-                {message.role === 'user' ? '用户' : 'AI助手'}
-              </div>
-              <div className="prose prose-sm max-w-none">
-                <ReactMarkdown>
-                  {message.content}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+              <span className="truncate font-medium">新对话</span>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteSession(session.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all p-1 rounded-full hover:bg-red-50"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </motion.button>
+            </motion.div>
+          ))}
+        </nav>
+      </aside>
+
+      {/* 右侧聊天区域 - 优化布局和滚动 */}
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300">
+          {currentSession?.messages.map((message, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <ChatMessage message={message} />
+            </motion.div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* 输入框区域 - 固定在底部 */}
+        <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-white">
+          <form onSubmit={handleSubmit} className="flex space-x-4">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="输入消息..."
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+              disabled={isLoading}
+              autoFocus
+            />
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isLoading}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-md disabled:opacity-50"
+            >
+              发送
+            </motion.button>
+          </form>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2 text-red-500 text-sm"
+            >
+              {error}
+            </motion.div>
+          )}
+        </div>
       </div>
-      
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="输入消息..."
-          className="flex-1 p-2 border rounded-lg"
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400"
-        >
-          发送
-        </button>
-      </form>
-    </div>
+    </main>
   );
-} 
+};
+
+export default Chat;
