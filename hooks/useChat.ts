@@ -14,7 +14,9 @@ export function useChat() {
     setCurrentSession,
     addMessage,
     updateLastMessage,
-    saveMessageToDatabase
+    saveMessageToDatabase,
+    updateSessionTitle,
+    generateSessionTitle
   } = useChatStore();
 
   const [input, setInput] = useState('');
@@ -42,11 +44,17 @@ export function useChat() {
 
     try {
       if (!currentSessionId) {
-        await createSession();
+        await createSession(input);
       }
 
       const userMessage: Message = { role: 'user', content: input };
       await addMessage(userMessage);
+      
+      const currentSession = sessions.find(s => s.id === currentSessionId);
+      if (currentSession && currentSession.messages.length === 0) {
+        await generateSessionTitle(currentSessionId, input);
+      }
+
       setInput('');
       setIsLoading(true);
 
@@ -72,7 +80,7 @@ export function useChat() {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, currentSessionId, currentSession]);
+  }, [input, isLoading, currentSessionId, sessions]);
 
   return {
     sessions,
@@ -88,5 +96,10 @@ export function useChat() {
     createSession,
     deleteSession,
     setCurrentSession,
+    updateSessionTitle,
+    generateSessionTitle,
+    clearError,
+    handleError,
+    setIsLoading
   };
 } 

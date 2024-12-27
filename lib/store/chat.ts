@@ -18,12 +18,14 @@ interface ChatStore {
   isLoading: boolean
   
   loadSessions: () => Promise<void>
-  createSession: () => Promise<void>
+  createSession: (firstMessage: string) => Promise<void>
   deleteSession: (id: string) => Promise<void>
   setCurrentSession: (id: string) => void
   addMessage: (message: ChatMessage) => Promise<void>
   updateLastMessage: (content: string) => void
   saveMessageToDatabase: (content: string) => Promise<void>
+  updateSessionTitle: (sessionId: string, title: string) => Promise<void>
+  generateSessionTitle: (sessionId: string, firstMessage: string) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -54,22 +56,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  createSession: async () => {
+  createSession: async (firstMessage: string) => {
     const { data: session } = await supabase
       .from('chat_sessions')
       .insert({})
       .select()
-      .single()
+      .single();
 
     if (session) {
+      const title = firstMessage.length > 20 
+        ? firstMessage.slice(0, 20) + '...' 
+        : firstMessage;
+
+      await supabase
+        .from('chat_sessions')
+        .update({ title })
+        .eq('id', session.id);
+
       set(state => ({
         sessions: [{
           id: session.id,
-          title: session.title || '新对话',
+          title: title,
           messages: []
         }, ...state.sessions],
         currentSessionId: session.id
-      }))
+      }));
     }
   },
 
@@ -141,6 +152,29 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       .eq('role', 'assistant')
       .order('created_at', { ascending: false })
       .limit(1)
+  },
+
+  updateSessionTitle: async (sessionId: string, title: string) => {
+    await supabase
+      .from('chat_sessions')
+      .update({ title })
+      .eq('id', sessionId)
+
+    set(state => ({
+      sessions: state.sessions.map(session =>
+        session.id === sessionId
+          ? { ...session, title }
+          : session
+      )
+    }))
+  },
+
+  generateSessionTitle: async (sessionId: string, firstMessage: string) => {
+    const title = firstMessage.length > 20 
+      ? firstMessage.slice(0, 20) + '...'
+      : firstMessage
+
+    await get().updateSessionTitle(sessionId, title)
   }
 }))
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { useChat } from '../hooks/useChat';
 import { motion } from 'framer-motion';
-import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftRightIcon, PencilIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
 const Chat: React.FC = () => {
   const {
@@ -21,13 +22,41 @@ const Chat: React.FC = () => {
     createSession,
     deleteSession,
     setCurrentSession,
+    updateSessionTitle,
+    generateSessionTitle,
   } = useChat();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     if (!isLoading && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isLoading]);
+
+  const handleTitleEdit = (session: Session) => {
+    setEditingId(session.id);
+    setEditTitle(session.title);
+  };
+
+  const handleTitleSave = async (sessionId: string) => {
+    if (editTitle.trim()) {
+      await updateSessionTitle(sessionId, editTitle.trim());
+    }
+    setEditingId(null);
+  };
+
+  const handleCreateSession = async () => {
+    if (input.trim()) {
+      try {
+        console.log("Creating session with input:", input.trim());
+        await createSession(input.trim());
+      } catch (error) {
+        console.error("Error creating session:", error);
+      }
+    }
+  };
 
   return (
     <main className="grid grid-cols-[280px_1fr] h-screen w-screen overflow-hidden bg-gray-50">
@@ -37,7 +66,7 @@ const Chat: React.FC = () => {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={createSession}
+            onClick={handleCreateSession}
             className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
           >
             <ChatBubbleLeftRightIcon className="w-5 h-5" />
@@ -47,31 +76,58 @@ const Chat: React.FC = () => {
 
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300">
           {sessions.map(session => (
-            <motion.div
+            <div
               key={session.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               onClick={() => setCurrentSession(session.id)}
-              className={`group flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all ${
+              className={clsx(
+                'group flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-all',
                 session.id === currentSessionId 
                   ? 'bg-blue-50 text-blue-600' 
                   : 'hover:bg-gray-50'
-              }`}
+              )}
             >
-              <span className="truncate font-medium">新对话</span>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
+              {editingId === session.id ? (
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  onBlur={() => handleTitleSave(session.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleTitleSave(session.id);
+                    }
+                  }}
+                  className="flex-1 px-2 py-1 text-sm border rounded"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  <span className="truncate flex-1">{session.title}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTitleEdit(session);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded-full transition-all"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteSession(session.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all p-1 rounded-full hover:bg-red-50"
+                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all ml-2 p-1 rounded-full hover:bg-red-50"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           ))}
         </nav>
       </aside>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { CodeProps } from 'react-markdown/lib/ast-to-react';
 
 interface ChatMessageProps {
   message: Message;
@@ -39,7 +40,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           )}
           components={{
             // 代码块渲染
-            code({ node, inline, className, children, ...props }) {
+            code({ node, inline, className, children, ...props }: CodeProps) {
               const match = /language-(\w+)/.exec(className || '');
               const language = match ? match[1] : '';
               
