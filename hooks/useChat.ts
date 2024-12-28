@@ -45,33 +45,49 @@ export function useChat() {
 
     try {
       if (!currentSessionId) {
-        await createSession(input);
-        return;
+        const newSession = await createSession();
+        if (!newSession) return;
+        
+        const userMessage: Message = { role: 'user', content: input };
+        await addMessage(userMessage, newSession.id);
+        await generateSessionTitle(newSession.id, input);
+        
+        setInput('');
+        setIsLoading(true);
+
+        const assistantMessage: Message = { role: 'assistant', content: '' };
+        await addMessage(assistantMessage, newSession.id);
+
+        const reader = await ChatService.sendMessage([userMessage]);
+        const fullContent = await ChatService.processStream(reader, (text) => {
+          updateLastMessage(text, newSession.id);
+        });
+
+        await saveMessageToDatabase(fullContent, newSession.id);
+        
+      } else {
+        const userMessage: Message = { role: 'user', content: input };
+        await addMessage(userMessage);
+        
+        const currentSession = sessions.find(s => s.id === currentSessionId);
+        if (currentSession && currentSession.messages.length === 0) {
+          await generateSessionTitle(currentSessionId, input);
+        }
+
+        setInput('');
+        setIsLoading(true);
+
+        const assistantMessage: Message = { role: 'assistant', content: '' };
+        await addMessage(assistantMessage);
+
+        const allMessages = [...(currentSession?.messages || []), userMessage];
+        const reader = await ChatService.sendMessage(allMessages);
+        const fullContent = await ChatService.processStream(reader, (text) => {
+          updateLastMessage(text);
+        });
+
+        await saveMessageToDatabase(fullContent);
       }
-
-      const userMessage: Message = { role: 'user', content: input };
-      await addMessage(userMessage);
-      
-      const currentSession = sessions.find(s => s.id === currentSessionId);
-      if (currentSession && currentSession.messages.length === 0) {
-        await generateSessionTitle(currentSessionId, input);
-      }
-
-      setInput('');
-      setIsLoading(true);
-
-      const assistantMessage: Message = { role: 'assistant', content: '' };
-      await addMessage(assistantMessage);
-
-      const messages = [...(currentSession?.messages || []), userMessage];
-      
-      const reader = await ChatService.sendMessage(messages);
-      const fullContent = await ChatService.processStream(reader, (text) => {
-        updateLastMessage(text);
-      });
-
-      await saveMessageToDatabase(fullContent);
-
     } catch (error) {
       handleError(error as Error);
       await addMessage({ 

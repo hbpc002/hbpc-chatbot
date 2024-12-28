@@ -86,11 +86,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   createSession: async () => {
-    console.log('开始创建新会话');
-
     try {
       // 1. 确保有用户会话
-      console.log('检查用户会话');
       const { data: { user }, error: getUserError } = await supabase.auth.getUser();
       if (getUserError) {
         console.error('获取用户信息失败:', getUserError);
@@ -98,21 +95,24 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
 
       if (!user) {
-        console.log('匿名登录');
         const { error: signInError } = await supabase.auth.signInAnonymously();
         if (signInError) {
           console.error('匿名登录失败:', signInError);
           throw signInError;
         }
+        // 重新获取用户信息
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (!newUser) {
+          throw new Error('无法获取用户信息');
+        }
       }
 
       // 2. 创建新会话
-      console.log('创建新的会话记录');
       const { data: newSession, error: createSessionError } = await supabase
         .from('chat_sessions')
         .insert({
           title: '新对话',
-          user_id: user?.id
+          user_id: user.id
         })
         .select()
         .single();
@@ -122,26 +122,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         throw createSessionError;
       }
 
-      if (newSession) {
-        const formattedSession = {
-          id: newSession.id,
-          title: '新对话',
-          messages: []
-        };
-
-        set(state => ({
-          sessions: [formattedSession, ...state.sessions],
-          currentSessionId: newSession.id
-        }));
-
-        return formattedSession;
+      if (!newSession) {
+        throw new Error('创建会话失败');
       }
+
+      const formattedSession = {
+        id: newSession.id,
+        title: '新对话',
+        messages: []
+      };
+
+      set(state => ({
+        sessions: [formattedSession, ...state.sessions],
+        currentSessionId: formattedSession.id
+      }));
+
+      return formattedSession;
     } catch (error) {
       console.error('创建新会话过程中发生错误:', error);
       return null;
     }
-    console.log('新会话创建完成');
-    return null;
   },
 
   deleteSession: async (id: string) => {
