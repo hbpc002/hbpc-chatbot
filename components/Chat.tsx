@@ -163,7 +163,7 @@ const Chat: React.FC = () => {
         </aside>
 
         {/* 聊天区域调整 */}
-        <div className="flex-1 flex flex-col h-full">
+        <div className="flex-1 flex flex-col h-full w-full">
           <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300">
             {currentSession?.messages.map((message, index) => (
               <motion.div
@@ -180,14 +180,14 @@ const Chat: React.FC = () => {
 
           {/* 输入框区域 - 固定在底部 */}
           <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-white">
-            <form onSubmit={handleSubmit} className="flex space-x-4">
+            <form onSubmit={handleSubmit} className="flex space-x-2 sm:space-x-4">
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="输入消息..."
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                className="flex-1 px-2 sm:px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 disabled={isLoading}
                 autoFocus
               />
@@ -196,7 +196,7 @@ const Chat: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-md disabled:opacity-50"
+                className="px-3 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 whitespace-nowrap"
               >
                 发送
               </motion.button>

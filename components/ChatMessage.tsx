@@ -30,7 +30,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             language={language}
             style={vs as any}
             PreTag="div"
-            className="rounded-lg !my-3"
+            className="rounded-lg !my-3 overflow-x-auto max-w-full"
             showLineNumbers={true}
             {...props}
           >
@@ -96,6 +96,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <div 
         className={clsx(
           'max-w-[85%] px-6 py-3 rounded-2xl shadow-sm',
+          'overflow-hidden',
           isUser 
             ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' 
             : 'bg-white border border-gray-100 text-gray-700'
@@ -106,7 +107,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
             'prose max-w-none',
             isUser ? 'prose-invert' : 'prose-blue',
             'prose-p:my-1 prose-pre:my-2',
-            'prose-code:before:content-none prose-code:after:content-none'
+            'prose-code:before:content-none prose-code:after:content-none',
+            'prose-pre:min-w-0',
+            '[&_pre]:!w-full [&_pre]:overflow-x-auto',
+            '[&_code]:break-words'
           )}
           components={markdownComponents}
         >

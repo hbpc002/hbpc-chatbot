@@ -44,34 +44,35 @@ export function useChat() {
     clearError();
 
     try {
-      let sessionId = currentSessionId;
-      if (!sessionId) {
+      const userInput = input.trim();
+      
+      if (!currentSessionId) {
         const newSession = await createSession();
         if (!newSession) return;
-        sessionId = newSession.id;
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      const userMessage: Message = { role: 'user', content: input };
-      await addMessage(userMessage, sessionId);
+      const userMessage: Message = { role: 'user', content: userInput };
+      await addMessage(userMessage);
       
       setInput('');
       setIsLoading(true);
 
       const assistantMessage: Message = { role: 'assistant', content: '' };
-      await addMessage(assistantMessage, sessionId);
+      await addMessage(assistantMessage);
 
-      const currentMessages = sessions.find(s => s.id === sessionId)?.messages || [];
+      const currentMessages = sessions.find(s => s.id === currentSessionId)?.messages || [];
       const messages = [...currentMessages, userMessage];
       
       const reader = await ChatService.sendMessage(messages);
       const fullContent = await ChatService.processStream(reader, (text) => {
-        updateLastMessage(text, sessionId);
+        updateLastMessage(text);
       });
 
-      await saveMessageToDatabase(fullContent, sessionId);
+      await saveMessageToDatabase(fullContent);
 
       if (currentMessages.length === 0) {
-        await generateSessionTitle(sessionId, input);
+        await generateSessionTitle(currentSessionId!, userInput);
       }
 
     } catch (error) {
@@ -79,12 +80,12 @@ export function useChat() {
       await addMessage({ 
         role: 'assistant', 
         content: '抱歉，发生了错误。' 
-      }, currentSessionId);
+      });
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, currentSessionId, sessions, createSession]);
+  }, [input, isLoading, currentSessionId, sessions, createSession, addMessage]);
 
   return {
     sessions,
