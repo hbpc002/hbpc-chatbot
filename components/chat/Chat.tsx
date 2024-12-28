@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChatInput } from './ChatInput';
 import { ChatMessage } from './ChatMessage';
@@ -12,6 +12,8 @@ import clsx from 'clsx';
 
 const Chat: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const {
     sessions,
     currentSessionId,
@@ -29,9 +31,30 @@ const Chat: React.FC = () => {
 
   const { theme } = useThemeContext();
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isSidebarOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node) &&
+        toggleButtonRef.current &&
+        !toggleButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
   return (
     <main className={`relative h-[95vh] w-screen overflow-hidden ${theme.bg} text-${theme.text} ${theme.shadow}`}>
       <button
+        ref={toggleButtonRef}
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg"
       >
@@ -41,14 +64,17 @@ const Chat: React.FC = () => {
       </button>
 
       <div className="flex h-full">
-        <aside className={clsx(
-          "fixed lg:relative lg:block z-50 bg-white border-r border-gray-200 flex flex-col shadow-lg",
-          "w-[280px] h-full overflow-y-auto",
-          "transition-transform duration-300 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          theme.bg,
-          `text-${theme.text}`
-        )}>
+        <aside
+          ref={sidebarRef}
+          className={clsx(
+            "fixed lg:relative lg:block z-50 bg-white border-r border-gray-200 flex flex-col shadow-lg",
+            "w-[280px] h-full overflow-y-auto",
+            "transition-transform duration-300 ease-in-out",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+            theme.bg,
+            `text-${theme.text}`
+          )}
+        >
           <Sidebar
             sessions={sessions}
             currentSessionId={currentSessionId || ''}

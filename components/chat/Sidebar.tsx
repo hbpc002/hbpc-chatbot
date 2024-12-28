@@ -42,28 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, isLoading } = useUser();
   const username = user?.name;
   const { theme } = useThemeContext();
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  useEffect(() => {
-    const checkScreenWidth = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkScreenWidth();
-    window.addEventListener('resize', checkScreenWidth);
-    return () => {
-      window.removeEventListener('resize', checkScreenWidth);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    } else {
-      setIsSidebarOpen(true);
-    }
-  }, [isMobile]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [isSettingsOpen]);
 
   const sidebarClassName = clsx(
-    isMobile ? 'hidden' : 'w-64 flex-shrink-0 border-r',
+    'w-full h-full flex flex-col',
     theme.bg,
     theme.text,
     theme.border
