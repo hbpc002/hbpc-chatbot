@@ -36,6 +36,7 @@ export function useChat() {
   }, [sessions]);
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
+  
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +46,7 @@ export function useChat() {
     try {
       if (!currentSessionId) {
         await createSession(input);
+        return;
       }
 
       const userMessage: Message = { role: 'user', content: input };

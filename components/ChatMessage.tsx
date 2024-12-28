@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { ComponentPropsWithoutRef } from 'react';
 import { Message } from '../types/chat';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { Components } from 'react-markdown';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { CodeProps } from 'react-markdown/lib/ast-to-react';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface ChatMessageProps {
   message: Message;
@@ -13,6 +12,77 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
+
+  const markdownComponents: Components = {
+    code: function Code({
+      node,
+      inline,
+      className,
+      children,
+      ...props
+    }) {
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      
+      if (!inline && language) {
+        return (
+          <SyntaxHighlighter
+            language={language}
+            style={vs as any}
+            PreTag="div"
+            className="rounded-lg !my-3"
+            showLineNumbers={true}
+            {...props}
+          >
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        );
+      }
+      
+      return (
+        <code
+          className={clsx(
+            'px-1.5 py-0.5 rounded-md text-sm',
+            isUser 
+              ? 'bg-blue-400 bg-opacity-50' 
+              : 'bg-gray-100'
+          )}
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    },
+    // 链接渲染
+    a: ({ children, href }) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={clsx(
+          'underline',
+          isUser ? 'text-blue-100' : 'text-blue-500'
+        )}
+      >
+        {children}
+      </a>
+    ),
+    // 列表渲染
+    ul: ({ children }) => (
+      <ul className="list-disc list-inside my-2">{children}</ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal list-inside my-2">{children}</ol>
+    ),
+    // 表格渲染
+    table: ({ children }) => (
+      <div className="overflow-x-auto my-4">
+        <table className="min-w-full divide-y divide-gray-200">
+          {children}
+        </table>
+      </div>
+    ),
+  };
 
   return (
     <motion.div
@@ -38,71 +108,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             'prose-p:my-1 prose-pre:my-2',
             'prose-code:before:content-none prose-code:after:content-none'
           )}
-          components={{
-            // 代码块渲染
-            code({ node, inline, className, children, ...props }: CodeProps) {
-              const match = /language-(\w+)/.exec(className || '');
-              const language = match ? match[1] : '';
-              
-              if (!inline && language) {
-                return (
-                  <SyntaxHighlighter
-                    language={language}
-                    style={vscDarkPlus}
-                    PreTag="div"
-                    className="rounded-lg !my-3"
-                    showLineNumbers={true}
-                    {...props}
-                  >
-                    {String(children).replace(/\n$/, '')}
-                  </SyntaxHighlighter>
-                );
-              }
-              
-              return (
-                <code
-                  className={clsx(
-                    'px-1.5 py-0.5 rounded-md text-sm',
-                    isUser 
-                      ? 'bg-blue-400 bg-opacity-50' 
-                      : 'bg-gray-100'
-                  )}
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
-            },
-            // 链接渲染
-            a: ({ children, href }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={clsx(
-                  'underline',
-                  isUser ? 'text-blue-100' : 'text-blue-500'
-                )}
-              >
-                {children}
-              </a>
-            ),
-            // 列表渲染
-            ul: ({ children }) => (
-              <ul className="list-disc list-inside my-2">{children}</ul>
-            ),
-            ol: ({ children }) => (
-              <ol className="list-decimal list-inside my-2">{children}</ol>
-            ),
-            // 表格渲染
-            table: ({ children }) => (
-              <div className="overflow-x-auto my-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  {children}
-                </table>
-              </div>
-            ),
-          }}
+          components={markdownComponents}
         >
           {message.content}
         </ReactMarkdown>

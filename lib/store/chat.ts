@@ -43,7 +43,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const formattedSessions = sessions.map(session => ({
         id: session.id,
         title: session.title,
-        messages: session.chat_messages.map(msg => ({
+        messages: session.chat_messages.map((msg: {
+          role: string;
+          content: string;
+        }) => ({
           role: msg.role,
           content: msg.content
         }))
