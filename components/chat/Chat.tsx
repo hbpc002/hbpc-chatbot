@@ -15,9 +15,9 @@ const Chat: React.FC = () => {
   const {
     sessions,
     currentSessionId,
-    messages,
+    messages, 
     handleSendMessage,
-    handleCreateSession,
+    createSession,
     setCurrentSession,
     handleTitleEdit,
     handleTitleSave,
@@ -51,9 +51,9 @@ const Chat: React.FC = () => {
         )}>
           <Sidebar
             sessions={sessions}
-            currentSessionId={currentSessionId}
+            currentSessionId={currentSessionId || ''}
             currentTheme={theme}
-            handleCreateSession={handleCreateSession}
+            handleCreateSession={createSession}
             setCurrentSession={setCurrentSession}
             handleTitleEdit={handleTitleEdit}
             handleTitleSave={handleTitleSave}

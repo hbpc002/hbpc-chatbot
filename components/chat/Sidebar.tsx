@@ -8,10 +8,11 @@ import { useState, useRef, useEffect } from 'react';
 import  ReactDOM  from 'react-dom';
 import { useUser } from '../../hooks/useUser';
 import { useThemeContext } from '../../contexts/ThemeContext';
+import { Theme } from '../../types/theme';
 
 interface SidebarProps {
   sessions: Session[];
-  currentSessionId: string;
+  currentSessionId: string | null;
   handleCreateSession: () => void;
   setCurrentSession: (id: string) => void;
   handleTitleEdit: (session: Session) => void;
@@ -20,6 +21,7 @@ interface SidebarProps {
   editingId: string | null;
   editTitle: string;
   setEditTitle: (title: string) => void;
+  currentTheme: Theme;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -33,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   editingId,
   editTitle,
   setEditTitle,
+  currentTheme,
 }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -80,7 +83,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [isSettingsOpen]);
 
-  const sidebarClassName = isMobile ? 'hidden' : 'w-64 flex-shrink-0 border-r border-gray-200';
+  const sidebarClassName = clsx(
+    isMobile ? 'hidden' : 'w-64 flex-shrink-0 border-r',
+    theme.bg,
+    theme.text,
+    theme.border
+  );
 
   return (
     <motion.aside className={sidebarClassName}>
@@ -107,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <SessionItem
             key={session.id}
             session={session}
-            currentSessionId={currentSessionId}
+            currentSessionId={currentSessionId || ''}
             editingId={editingId}
             editTitle={editTitle}
             setEditTitle={setEditTitle}

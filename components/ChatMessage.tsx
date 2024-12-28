@@ -5,11 +5,19 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useThemeContext } from '../../contexts/ThemeContext';
+import { useThemeContext } from '../contexts/ThemeContext';
 
 interface ChatMessageProps {
   message: Message;
 }
+
+const CodeBlock = ({ children }: ComponentPropsWithoutRef<"code">) => {
+  return (
+    <SyntaxHighlighter style={vs} language="typescript">
+      {children as string}
+    </SyntaxHighlighter>
+  );
+};
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { theme } = useThemeContext();

@@ -25,6 +25,8 @@ export function useChat() {
   
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     loadSessions();
@@ -100,6 +102,31 @@ export function useChat() {
     }
   }, [input, isLoading, currentSessionId, sessions]);
 
+  const handleTitleEdit = (session: Session) => {
+    setEditingId(session.id);
+    setEditTitle(session.title);
+  };
+
+  const handleTitleSave = async (sessionId: string) => {
+    if (!editTitle.trim()) return;
+    
+    try {
+      await updateSessionTitle(sessionId, editTitle);
+      setEditingId(null);
+      setEditTitle('');
+    } catch (error) {
+      console.error('保存标题失败:', error);
+      handleError(error as Error);
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
+    if (!currentSessionId || !message.trim()) return;
+    
+    await addMessage({ role: 'user', content: message });
+    // 添加发送消息到API的逻辑
+  };
+
   return {
     sessions,
     currentSessionId,
@@ -118,6 +145,12 @@ export function useChat() {
     clearError,
     handleError,
     setIsLoading,
-    messages
+    messages,
+    editingId,
+    editTitle,
+    setEditTitle,
+    handleTitleEdit,
+    handleTitleSave,
+    handleSendMessage,
   };
 } 

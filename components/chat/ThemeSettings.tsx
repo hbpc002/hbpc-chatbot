@@ -191,7 +191,7 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ onClose }) => {
       className="bg-white rounded-lg shadow-lg p-4 w-80 border border-gray-200"
       onClick={(e) => e.stopPropagation()}
     >
-      <h3 className="text-sm font-medium text-gray-900 mb-3">模���选择</h3>
+      <h3 className="text-sm font-medium text-gray-900 mb-3">模型选择</h3>
       <div className="mb-4">
         <select
           value={selectedModel.id}
