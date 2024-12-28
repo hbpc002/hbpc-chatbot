@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '../lib/store/chat';
 import { ChatService } from '../services/chatService';
 import { useError } from './useError';
-import { Message } from '../types/chat';
+import { Message, Session } from '../types/chat';
 
 export function useChat() {
   const {
@@ -23,7 +23,7 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { error, handleError, clearError } = useError();
   
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');

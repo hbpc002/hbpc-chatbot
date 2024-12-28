@@ -1,9 +1,9 @@
 'use client';
 
-import { useThemeStore } from '../lib/store/theme';
+import { useThemeStore, Theme } from '../lib/store/theme';
 import { createContext, useContext, ReactNode } from 'react';
 
-const ThemeContext = createContext<ReturnType<typeof useThemeStore>['currentTheme']>(null!);
+const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { currentTheme } = useThemeStore();
@@ -16,5 +16,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  const theme = useContext(ThemeContext);
+  if (!theme) {
+    throw new Error('useTheme 必须在 ThemeProvider 内部使用');
+  }
+  return theme;
 } 

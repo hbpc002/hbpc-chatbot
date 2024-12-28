@@ -6,6 +6,7 @@ export interface Theme {
   bg: string;
   text: string;
   shadow: string;
+  border: string;
   buttonText: string;
   buttonShadow: string;
   buttonRounded: string;

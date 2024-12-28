@@ -20,6 +20,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-blue-100',
     messageAssistantBg: 'bg-gray-100',
+    border: 'border-gray-200',
   },
   {
     id: 'green',
@@ -37,6 +38,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-green-100',
     messageAssistantBg: 'bg-gray-100',
+    border: 'border-gray-200',
   },
   {
     id: 'purple',
@@ -54,6 +56,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-purple-100',
     messageAssistantBg: 'bg-gray-100',
+    border: 'border-gray-200',
   },
   {
     id: 'dark',
@@ -71,6 +74,7 @@ export const themes = [
     inputText: 'text-gray-100',
     messageUserBg: 'bg-gray-800',
     messageAssistantBg: 'bg-gray-700',
+    border: 'border-gray-200',
   },
   {
     id: 'amber',
@@ -88,6 +92,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-amber-100',
     messageAssistantBg: 'bg-gray-100',
+    border: 'border-gray-200',
   },
   {
     id: 'teal',
@@ -105,6 +110,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-teal-100',
     messageAssistantBg: 'bg-gray-100',
+    border: 'border-gray-200',
   },
   {
     id: 'neutral',
@@ -122,6 +128,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-gray-200',
     messageAssistantBg: 'bg-gray-50',
+    border: 'border-gray-200',
   },
   {
     id: 'pastel',
@@ -139,6 +146,7 @@ export const themes = [
     inputText: 'text-gray-700',
     messageUserBg: 'bg-pink-100',
     messageAssistantBg: 'bg-purple-100',
+    border: 'border-gray-200',
   },
 ];
 

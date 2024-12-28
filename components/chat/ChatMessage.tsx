@@ -1,6 +1,6 @@
-import React, { ComponentPropsWithoutRef } from 'react';
+import React from 'react';
 import { Message } from '../../types/chat';
-import ReactMarkdown, { Components } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -10,16 +10,24 @@ interface ChatMessageProps {
   message: Message;
 }
 
-const CodeBlock: React.FC<Components['code']> = ({ node, inline, className, children, ...props }) => {
-  const match = (className || '').match(/language-(?<lang>[\w-]+)/);
+// 定义 CodeProps 接口
+interface CodeProps {
+  inline?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}
+
+const CodeBlock = ({ inline, className, children, ...props }: CodeProps) => {
+  const match = (className || '').match(/language-([\w-]+)/);
   return !inline && match ? (
     <SyntaxHighlighter
-      children={String(children).replace(/\n$/, '')}
       style={vs}
-      language={match.groups?.lang}
+      language={match[1] || 'text'}
       PreTag="div"
       {...props}
-    />
+    >
+      {String(children).replace(/\n$/, '')}
+    </SyntaxHighlighter>
   ) : (
     <code className={className} {...props}>
       {children}
