@@ -86,16 +86,29 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   createSession: async () => {
+    console.log('开始创建新会话');
+
     try {
       // 1. 确保有用户会话
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('检查用户会话');
+      const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+      if (getUserError) {
+        console.error('获取用户信息失败:', getUserError);
+        return null;
+      }
+
       if (!user) {
-        const { error } = await supabase.auth.signInAnonymously();
-        if (error) throw error;
+        console.log('匿名登录');
+        const { error: signInError } = await supabase.auth.signInAnonymously();
+        if (signInError) {
+          console.error('匿名登录失败:', signInError);
+          throw signInError;
+        }
       }
 
       // 2. 创建新会话
-      const { data: newSession, error } = await supabase
+      console.log('创建新的会话记录');
+      const { data: newSession, error: createSessionError } = await supabase
         .from('chat_sessions')
         .insert({
           title: '新对话',
@@ -104,7 +117,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (createSessionError) {
+        console.error('创建会话记录失败:', createSessionError);
+        throw createSessionError;
+      }
 
       if (newSession) {
         const formattedSession = {
@@ -121,9 +137,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return formattedSession;
       }
     } catch (error) {
-      console.error('创建会话失败:', error);
+      console.error('创建新会话过程中发生错误:', error);
       return null;
     }
+    console.log('新会话创建完成');
     return null;
   },
 

@@ -1,7 +1,12 @@
 'use client'
-
-import Chat from '../components/Chat'
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import React from 'react';
+import Chat from '@/components/chat/Chat'
 
 export default function Home() {
-  return <Chat />
+  return (
+    <ThemeProvider>
+      <Chat />
+    </ThemeProvider>
+  );
 } 

@@ -36,7 +36,7 @@ export function useChat() {
   }, [sessions]);
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
-  
+  const messages = currentSession?.messages || [];
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,25 +44,26 @@ export function useChat() {
     clearError();
 
     try {
-      const userInput = input.trim();
-      
       if (!currentSessionId) {
-        const newSession = await createSession();
-        if (!newSession) return;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await createSession(input);
+        return;
       }
 
-      const userMessage: Message = { role: 'user', content: userInput };
+      const userMessage: Message = { role: 'user', content: input };
       await addMessage(userMessage);
       
+      const currentSession = sessions.find(s => s.id === currentSessionId);
+      if (currentSession && currentSession.messages.length === 0) {
+        await generateSessionTitle(currentSessionId, input);
+      }
+
       setInput('');
       setIsLoading(true);
 
       const assistantMessage: Message = { role: 'assistant', content: '' };
       await addMessage(assistantMessage);
 
-      const currentMessages = sessions.find(s => s.id === currentSessionId)?.messages || [];
-      const messages = [...currentMessages, userMessage];
+      const messages = [...(currentSession?.messages || []), userMessage];
       
       const reader = await ChatService.sendMessage(messages);
       const fullContent = await ChatService.processStream(reader, (text) => {
@@ -70,10 +71,6 @@ export function useChat() {
       });
 
       await saveMessageToDatabase(fullContent);
-
-      if (currentMessages.length === 0) {
-        await generateSessionTitle(currentSessionId!, userInput);
-      }
 
     } catch (error) {
       handleError(error as Error);
@@ -85,11 +82,10 @@ export function useChat() {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, currentSessionId, sessions, createSession, addMessage]);
+  }, [input, isLoading, currentSessionId, sessions]);
 
   return {
     sessions,
-    currentSession,
     currentSessionId,
     input,
     setInput,
@@ -105,6 +101,7 @@ export function useChat() {
     generateSessionTitle,
     clearError,
     handleError,
-    setIsLoading
+    setIsLoading,
+    messages
   };
 } 
