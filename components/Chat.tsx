@@ -50,13 +50,15 @@ const Chat: React.FC = () => {
   };
 
   const handleCreateSession = async () => {
-    if (input.trim()) {
-      try {
-        console.log("Creating session with input:", input.trim());
-        await createSession(input.trim());
-      } catch (error) {
-        console.error("Error creating session:", error);
+    try {
+      console.log("Creating session");
+      const newSession = await createSession();
+      // 确保创建后立即切换到新会话
+      if (newSession) {
+        setCurrentSession(newSession.id);
       }
+    } catch (error) {
+      console.error("Error creating session:", error);
     }
   };
 

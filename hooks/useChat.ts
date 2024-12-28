@@ -44,45 +44,47 @@ export function useChat() {
     clearError();
 
     try {
-      if (!currentSessionId) {
-        await createSession(input);
-        return;
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        const newSession = await createSession();
+        if (!newSession) return;
+        sessionId = newSession.id;
       }
 
       const userMessage: Message = { role: 'user', content: input };
-      await addMessage(userMessage);
+      await addMessage(userMessage, sessionId);
       
-      const currentSession = sessions.find(s => s.id === currentSessionId);
-      if (currentSession && currentSession.messages.length === 0) {
-        await generateSessionTitle(currentSessionId, input);
-      }
-
       setInput('');
       setIsLoading(true);
 
       const assistantMessage: Message = { role: 'assistant', content: '' };
-      await addMessage(assistantMessage);
+      await addMessage(assistantMessage, sessionId);
 
-      const messages = [...(currentSession?.messages || []), userMessage];
+      const currentMessages = sessions.find(s => s.id === sessionId)?.messages || [];
+      const messages = [...currentMessages, userMessage];
       
       const reader = await ChatService.sendMessage(messages);
       const fullContent = await ChatService.processStream(reader, (text) => {
-        updateLastMessage(text);
+        updateLastMessage(text, sessionId);
       });
 
-      await saveMessageToDatabase(fullContent);
+      await saveMessageToDatabase(fullContent, sessionId);
+
+      if (currentMessages.length === 0) {
+        await generateSessionTitle(sessionId, input);
+      }
 
     } catch (error) {
       handleError(error as Error);
       await addMessage({ 
         role: 'assistant', 
         content: '抱歉，发生了错误。' 
-      });
+      }, currentSessionId);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, currentSessionId, sessions]);
+  }, [input, isLoading, currentSessionId, sessions, createSession]);
 
   return {
     sessions,

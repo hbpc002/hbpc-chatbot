@@ -18,12 +18,12 @@ interface ChatStore {
   isLoading: boolean
   
   loadSessions: () => Promise<void>
-  createSession: (firstMessage: string) => Promise<void>
+  createSession: () => Promise<ChatSession | null>
   deleteSession: (id: string) => Promise<void>
   setCurrentSession: (id: string) => void
-  addMessage: (message: ChatMessage) => Promise<void>
-  updateLastMessage: (content: string) => void
-  saveMessageToDatabase: (content: string) => Promise<void>
+  addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>
+  updateLastMessage: (content: string, sessionId?: string) => void
+  saveMessageToDatabase: (content: string, sessionId?: string) => Promise<void>
   updateSessionTitle: (sessionId: string, title: string) => Promise<void>
   generateSessionTitle: (sessionId: string, firstMessage: string) => Promise<void>
 }
@@ -59,32 +59,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  createSession: async (firstMessage: string) => {
+  createSession: async () => {
     const { data: session } = await supabase
       .from('chat_sessions')
-      .insert({})
+      .insert({
+        title: '新对话'
+      })
       .select()
       .single();
 
     if (session) {
-      const title = firstMessage.length > 20 
-        ? firstMessage.slice(0, 20) + '...' 
-        : firstMessage;
-
-      await supabase
-        .from('chat_sessions')
-        .update({ title })
-        .eq('id', session.id);
+      const newSession = {
+        id: session.id,
+        title: '新对话',
+        messages: []
+      };
 
       set(state => ({
-        sessions: [{
-          id: session.id,
-          title: title,
-          messages: []
-        }, ...state.sessions],
+        sessions: [newSession, ...state.sessions],
         currentSessionId: session.id
       }));
+
+      return newSession;
     }
+    return null;
   },
 
   deleteSession: async (id: string) => {
@@ -103,34 +101,34 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ currentSessionId: id })
   },
 
-  addMessage: async (message: ChatMessage) => {
-    const { currentSessionId } = get()
-    if (!currentSessionId) return
+  addMessage: async (message: ChatMessage, sessionId?: string) => {
+    const targetSessionId = sessionId || get().currentSessionId;
+    if (!targetSessionId) return;
 
     set(state => ({
       sessions: state.sessions.map(session => 
-        session.id === currentSessionId
+        session.id === targetSessionId
           ? { ...session, messages: [...session.messages, message] }
           : session
       )
-    }))
+    }));
 
     await supabase
       .from('chat_messages')
       .insert({
-        session_id: currentSessionId,
+        session_id: targetSessionId,
         role: message.role,
         content: message.content
-      })
+      });
   },
 
-  updateLastMessage: (content: string) => {
-    const { currentSessionId } = get()
-    if (!currentSessionId) return
+  updateLastMessage: (content: string, sessionId?: string) => {
+    const targetSessionId = sessionId || get().currentSessionId;
+    if (!targetSessionId) return;
 
     set(state => ({
       sessions: state.sessions.map(session => 
-        session.id === currentSessionId
+        session.id === targetSessionId
           ? {
               ...session,
               messages: session.messages.map((msg, index) => 
@@ -141,20 +139,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             }
           : session
       )
-    }))
+    }));
   },
 
-  saveMessageToDatabase: async (content: string) => {
-    const { currentSessionId } = get()
-    if (!currentSessionId) return
+  saveMessageToDatabase: async (content: string, sessionId?: string) => {
+    const targetSessionId = sessionId || get().currentSessionId;
+    if (!targetSessionId) return;
 
     await supabase
       .from('chat_messages')
       .update({ content })
-      .eq('session_id', currentSessionId)
+      .eq('session_id', targetSessionId)
       .eq('role', 'assistant')
       .order('created_at', { ascending: false })
-      .limit(1)
+      .limit(1);
   },
 
   updateSessionTitle: async (sessionId: string, title: string) => {
