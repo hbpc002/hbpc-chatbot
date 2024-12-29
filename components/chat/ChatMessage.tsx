@@ -80,8 +80,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       className={clsx(
         "mb-4 p-3 rounded-lg",
         message.role === 'user' 
-          ? `${theme.messageUserBg} ${theme.text} self-end` 
-          : `${theme.messageAssistantBg} ${theme.text} self-start`
+          ? `${theme.messageUserBg} ${theme.text} ml-auto max-w-[85%] w-fit`
+          : `${theme.messageAssistantBg} ${theme.text} mr-auto max-w-[100%] w-fit`
       )}
     >
       <ReactMarkdown 
