@@ -3,8 +3,7 @@ import { ChatMessageType } from '../../types/chat';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Highlight, themes } from 'prism-react-renderer';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useThemeContext } from '../../contexts/ThemeContext';
@@ -22,18 +21,50 @@ interface CodeProps {
 }
 
 const CodeBlock = ({ inline, className, children, ...props }: CodeProps) => {
+  const { theme } = useThemeContext();
   const match = (className || '').match(/language-([\w-]+)/);
-  return !inline && match ? (
-    <SyntaxHighlighter
-      style={vs}
-      language={match[1] || 'text'}
-      PreTag="div"
+  const language = match?.[1] || 'text';
+  
+  if (!inline && match) {
+    return (
+      <div className="relative my-4">
+        <div className="absolute right-2 top-2 text-xs text-gray-400/80 font-mono">
+          {language}
+        </div>
+        <Highlight
+          theme={themes.vsDark}
+          code={String(children).replace(/\n$/, '')}
+          language={language}
+        >
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className="rounded-md !mt-2 !mb-2 p-4 bg-[#1E1E1E] overflow-x-auto">
+              {tokens.map((line, i) => (
+                <div key={i} {...getLineProps({ line })}>
+                  <span className="inline-block w-8 mr-4 text-gray-500 text-right select-none">
+                    {i + 1}
+                  </span>
+                  {line.map((token, key) => (
+                    <span key={key} {...getTokenProps({ token })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
+      </div>
+    );
+  }
+
+  return (
+    <code 
+      className={clsx(
+        "px-1.5 py-0.5 rounded-md", 
+        theme.bg === 'bg-gray-900' 
+          ? "bg-gray-500 text-gray-100"  // 暗色主题下的内联代码样式
+          : "bg-gray-300 text-gray-800"  // 亮色主题下的内联代码样式
+      )} 
       {...props}
     >
-      {String(children).replace(/\n$/, '')}
-    </SyntaxHighlighter>
-  ) : (
-    <code className={className} {...props}>
       {children}
     </code>
   );
@@ -52,7 +83,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       message.role === 'user' ? "flex flex-col items-end" : "flex flex-col items-start"
     )}>
       {formattedTime && (
-        <span className="text-xs text-gray-400 mb-1">
+        <span className={clsx("text-xs mb-1", theme.text)}>
           {formattedTime}
         </span>
       )}
@@ -62,8 +93,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         className={clsx(
           "p-3 rounded-lg",
           message.role === 'user' 
-            ? theme.messageUserBg + " text-gray-800 max-w-[85%]" 
-            : theme.messageAssistantBg + " text-gray-800 max-w-[98%]"
+            ? theme.messageUserBg + " " + theme.text + " max-w-[85%]" 
+            : theme.messageAssistantBg + " " + theme.text + " max-w-[98%]"
         )}
       >
         <ReactMarkdown components={{ code: CodeBlock }}>{message.content}</ReactMarkdown>

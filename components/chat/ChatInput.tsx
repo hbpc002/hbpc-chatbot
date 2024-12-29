@@ -13,7 +13,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
   const { theme } = useThemeContext();
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 flex items-center">
+    <form 
+      onSubmit={handleSubmit} 
+      className={clsx(
+        "p-4 flex items-center",
+        theme.bg,
+        "border-t",
+        theme.border
+      )}
+    >
       <motion.textarea
         ref={inputRef}
         value={input}
@@ -24,7 +32,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
           theme.inputBg,
           theme.inputText,
           theme.inputBorder,
-          "scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300"
+          "scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600"
         )}
         rows={1}
         onKeyDown={(e) => {

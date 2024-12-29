@@ -71,10 +71,10 @@ export const themes = [
     buttonRounded: 'rounded-lg',
     inputBg: 'bg-gray-800',
     inputBorder: 'border-gray-700',
-    inputText: 'text-gray-100',
+    inputText: 'text-gray-200',
     messageUserBg: 'bg-gray-800',
-    messageAssistantBg: 'bg-gray-700',
-    border: 'border-gray-200',
+    messageAssistantBg: 'bg-gray-800',
+    border: 'border-gray-700',
   },
   {
     id: 'amber',
