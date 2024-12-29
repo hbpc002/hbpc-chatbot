@@ -9,6 +9,7 @@ import { useChat } from '../../hooks/useChat';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { Session, ChatMessage as IChatMessage } from '../../types/chat';
 
 const Chat: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -55,7 +56,7 @@ const Chat: React.FC = () => {
     <main className={clsx("flex flex-col h-screen", theme.bg)}>
       <header className={clsx("flex items-center p-0 border-b", theme.border, theme.bg)}>
         <button
-          ref={toggleButtonRef}
+          ref={toggleButtonRef} 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg"
         >
@@ -79,7 +80,7 @@ const Chat: React.FC = () => {
           )}
         >
           <Sidebar
-            sessions={sessions}
+            sessions={sessions as Session[]}
             currentSessionId={currentSessionId || ''}
             currentTheme={theme}
             handleCreateSession={createSession}

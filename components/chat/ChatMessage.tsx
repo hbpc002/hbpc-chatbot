@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatMessageType } from '../../types/chat';
+import { ChatMessage as ChatMessageType } from '../../types/chat';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
@@ -72,33 +72,30 @@ const CodeBlock = ({ inline, className, children, ...props }: CodeProps) => {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { theme } = useThemeContext();
-  
-  const formattedTime = message.created_at 
-    ? format(new Date(message.created_at), 'yyyy/MM/dd HH:mm:ss', { locale: zhCN })
-    : '';
 
   return (
-    <div className={clsx(
-      "mb-4",
-      message.role === 'user' ? "flex flex-col items-end" : "flex flex-col items-start"
-    )}>
-      {formattedTime && (
-        <span className={clsx("text-xs mb-1", theme.text)}>
-          {formattedTime}
-        </span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={clsx(
+        "mb-4 p-3 rounded-lg",
+        message.role === 'user' 
+          ? theme.messageUserBg + " text-gray-800 self-end" 
+          : theme.messageAssistantBg + " text-gray-800 self-start"
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={clsx(
-          "p-3 rounded-lg",
-          message.role === 'user' 
-            ? theme.messageUserBg + " " + theme.text + " max-w-[85%]" 
-            : theme.messageAssistantBg + " " + theme.text + " max-w-[98%]"
-        )}
+    >
+      <ReactMarkdown 
+        components={{ 
+          code: CodeBlock 
+        }}
       >
-        <ReactMarkdown components={{ code: CodeBlock }}>{message.content}</ReactMarkdown>
-      </motion.div>
-    </div>
+        {message.content}
+      </ReactMarkdown>
+      {message.created_at && (
+        <div className="text-xs text-gray-500 mt-1">
+          {new Date(message.created_at).toLocaleString()}
+        </div>
+      )}
+    </motion.div>
   );
 }; 

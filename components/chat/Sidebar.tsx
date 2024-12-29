@@ -12,7 +12,8 @@ import { Theme } from '../../types/theme';
 
 interface SidebarProps {
   sessions: Session[];
-  currentSessionId: string | null;
+  currentSessionId: string;
+  currentTheme: Theme;
   handleCreateSession: () => void;
   setCurrentSession: (id: string) => void;
   handleTitleEdit: (session: Session) => void;
@@ -21,7 +22,6 @@ interface SidebarProps {
   editingId: string | null;
   editTitle: string;
   setEditTitle: (title: string) => void;
-  currentTheme: Theme;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({

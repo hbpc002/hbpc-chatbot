@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+  created_at?: string
 }
 
 interface ChatSession {
@@ -70,7 +71,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             content: string;
             created_at: string;
           }) => ({
-            role: msg.role,
+            role: msg.role as 'user' | 'assistant',
             content: msg.content,
             created_at: msg.created_at
           }))
