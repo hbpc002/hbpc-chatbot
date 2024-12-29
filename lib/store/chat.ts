@@ -22,7 +22,7 @@ interface ChatStore {
   loadSessions: () => Promise<void>
   createSession: () => Promise<ChatSession | null>
   deleteSession: (id: string) => Promise<void>
-  setCurrentSession: (id: string) => void
+  setCurrentSession: (id: string | null) => void
   addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>
   updateLastMessage: (content: string, sessionId?: string) => void
   saveMessageToDatabase: (content: string, sessionId?: string) => Promise<void>
@@ -126,18 +126,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   deleteSession: async (id: string) => {
+    const isLastSession = get().sessions.length === 1 && get().currentSessionId === id;
+
     await supabase
       .from('chat_sessions')
       .delete()
-      .eq('id', id)
+      .eq('id', id);
 
     set(state => ({
       sessions: state.sessions.filter(s => s.id !== id),
-      currentSessionId: state.sessions[0]?.id || null
-    }))
+      currentSessionId: isLastSession ? null : state.currentSessionId
+    }));
   },
 
-  setCurrentSession: (id: string) => {
+  setCurrentSession: (id: string | null) => {
     set({ currentSessionId: id })
   },
 

@@ -17,7 +17,7 @@ interface SidebarProps {
   setCurrentSession: (id: string) => void;
   handleTitleEdit: (session: Session) => void;
   handleTitleSave: (sessionId: string) => void;
-  deleteSession: (id: string) => void;
+  deleteSession: (id: string) => Promise<void>;
   editingId: string | null;
   editTitle: string;
   setEditTitle: (title: string) => void;

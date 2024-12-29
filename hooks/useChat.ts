@@ -45,57 +45,50 @@ export function useChat() {
     if (!input.trim() || isLoading) return;
     clearError();
 
+    let targetSessionId: string | undefined | null;
+
     try {
-      if (!currentSessionId) {
+      targetSessionId = currentSessionId;
+      if (!targetSessionId) {
         const newSession = await createSession();
-        if (!newSession) return;
-        
-        const userMessage: Message = { role: 'user', content: input };
-        await addMessage(userMessage, newSession.id);
-        await generateSessionTitle(newSession.id, input);
-        
-        setInput('');
-        setIsLoading(true);
-
-        const assistantMessage: Message = { role: 'assistant', content: '' };
-        await addMessage(assistantMessage, newSession.id);
-
-        const reader = await ChatService.sendMessage([userMessage]);
-        const fullContent = await ChatService.processStream(reader, (text) => {
-          updateLastMessage(text, newSession.id);
-        });
-
-        await saveMessageToDatabase(fullContent, newSession.id);
-        
-      } else {
-        const userMessage: Message = { role: 'user', content: input };
-        await addMessage(userMessage);
-        
-        const currentSession = sessions.find(s => s.id === currentSessionId);
-        if (currentSession && currentSession.messages.length === 0) {
-          await generateSessionTitle(currentSessionId, input);
+        if (!newSession) {
+          throw new Error('创建会话失败');
         }
-
-        setInput('');
-        setIsLoading(true);
-
-        const assistantMessage: Message = { role: 'assistant', content: '' };
-        await addMessage(assistantMessage);
-
-        const allMessages = [...(currentSession?.messages || []), userMessage];
-        const reader = await ChatService.sendMessage(allMessages);
-        const fullContent = await ChatService.processStream(reader, (text) => {
-          updateLastMessage(text);
-        });
-
-        await saveMessageToDatabase(fullContent);
+        targetSessionId = newSession.id;
       }
+
+      const userMessage: Message = { role: 'user', content: input };
+      await addMessage(userMessage, targetSessionId);
+      
+      const currentSession = sessions.find(s => s.id === targetSessionId);
+      if (currentSession && currentSession.messages.length === 0) {
+        await generateSessionTitle(targetSessionId, input);
+      }
+
+      setInput('');
+      setIsLoading(true);
+
+      const assistantMessage: Message = { role: 'assistant', content: '' };
+      await addMessage(assistantMessage, targetSessionId);
+
+      const allMessages = [...(currentSession?.messages || []), userMessage];
+      const reader = await ChatService.sendMessage(allMessages);
+      const fullContent = await ChatService.processStream(reader, (text) => {
+        if (targetSessionId) {
+          updateLastMessage(text, targetSessionId);
+        }
+      });
+
+      await saveMessageToDatabase(fullContent, targetSessionId);
+
     } catch (error) {
       handleError(error as Error);
-      await addMessage({ 
-        role: 'assistant', 
-        content: '抱歉，发生了错误。' 
-      });
+      if (targetSessionId) {
+        await addMessage({ 
+          role: 'assistant', 
+          content: '抱歉，发生了错误。' 
+        }, targetSessionId);
+      }
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -121,10 +114,22 @@ export function useChat() {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!currentSessionId || !message.trim()) return;
-    
-    await addMessage({ role: 'user', content: message });
-    // 添加发送消息到API的逻辑
+    try {
+      let targetSessionId = currentSessionId;
+      if (!targetSessionId) {
+        const newSession = await createSession();
+        if (!newSession) {
+          console.error('创建会话失败，无法发送消息');
+          return;
+        }
+        targetSessionId = newSession.id;
+      }
+
+      await addMessage({ role: 'user', content: message }, targetSessionId);
+      // 添加发送消息到API的逻辑
+    } catch (error) {
+      handleError(error as Error);
+    }
   };
 
   return {
