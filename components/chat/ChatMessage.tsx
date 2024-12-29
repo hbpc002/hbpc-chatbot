@@ -74,28 +74,34 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { theme } = useThemeContext();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={clsx(
-        "mb-4 p-3 rounded-lg",
-        message.role === 'user' 
-          ? `${theme.messageUserBg} ${theme.text} ml-auto max-w-[85%] w-fit`
-          : `${theme.messageAssistantBg} ${theme.text} mr-auto max-w-[100%] w-fit`
-      )}
-    >
-      <ReactMarkdown 
-        components={{ 
-          code: CodeBlock 
-        }}
-      >
-        {message.content}
-      </ReactMarkdown>
+    <div className="mb-4">
       {message.created_at && (
-        <div className={clsx("text-xs mt-1", theme.text)}>
+        <div className={clsx(
+          "text-xs mb-1", 
+          theme.text,
+          message.role === 'user' ? "text-right" : "text-left" // 让时间戳的对齐方式跟随消息
+        )}>
           {new Date(message.created_at).toLocaleString()}
         </div>
       )}
-    </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={clsx(
+          "p-3 rounded-lg",
+          message.role === 'user' 
+            ? `${theme.messageUserBg} ${theme.text} ml-auto max-w-[85%] w-fit`
+            : `${theme.messageAssistantBg} ${theme.text}`
+        )}
+      >
+        <ReactMarkdown 
+          components={{ 
+            code: CodeBlock 
+          }}
+        >
+          {message.content}
+        </ReactMarkdown>
+      </motion.div>
+    </div>
   );
 }; 

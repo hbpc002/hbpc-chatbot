@@ -53,7 +53,7 @@ const Chat: React.FC = () => {
   }, [isSidebarOpen]);
 
   return (
-    <main className={clsx("flex flex-col h-screen", theme.bg)}>
+    <main className={clsx("flex flex-col h-screen overflow-hidden", theme.bg)}>
       <header className={clsx("flex items-center p-0 border-b", theme.border, theme.bg)}>
         <button
           ref={toggleButtonRef} 
@@ -70,7 +70,7 @@ const Chat: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex h-full">
+      <div className="flex h-full overflow-hidden">
         <aside
           ref={sidebarRef}
           className={clsx(
