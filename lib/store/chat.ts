@@ -68,9 +68,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           messages: session.chat_messages.map((msg: {
             role: string;
             content: string;
+            created_at: string;
           }) => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content,
+            created_at: msg.created_at
           }))
         }));
         
@@ -147,10 +149,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const targetSessionId = sessionId || get().currentSessionId;
     if (!targetSessionId) return;
 
+    const messageWithTimestamp = {
+      ...message,
+      created_at: new Date().toISOString()
+    };
+
     set(state => ({
       sessions: state.sessions.map(session => 
         session.id === targetSessionId
-          ? { ...session, messages: [...session.messages, message] }
+          ? { ...session, messages: [...session.messages, messageWithTimestamp] }
           : session
       )
     }));
@@ -160,7 +167,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       .insert({
         session_id: targetSessionId,
         role: message.role,
-        content: message.content
+        content: message.content,
+        created_at: messageWithTimestamp.created_at
       });
   },
 

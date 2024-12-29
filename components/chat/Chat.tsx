@@ -93,7 +93,11 @@ const Chat: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: theme.bg, color: theme.text }}>
           <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300">
             {messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
+              <ChatMessage 
+                key={index} 
+                message={message} 
+                createdAt={message.created_at}
+              />
             ))}
           </div>
           <ChatInput onSendMessage={handleSendMessage} />
