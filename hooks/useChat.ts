@@ -3,6 +3,7 @@ import { useChatStore } from '../lib/store/chat';
 import { ChatService } from '../services/chatService';
 import { useError } from './useError';
 import { Message, Session } from '../types/chat';
+import { useIsMobile } from './useIsMobile';
 
 export function useChat() {
   const {
@@ -27,6 +28,7 @@ export function useChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadSessions();
@@ -91,9 +93,11 @@ export function useChat() {
       }
     } finally {
       setIsLoading(false);
-      inputRef.current?.focus();
+      if (!isMobile) {
+        inputRef.current?.focus();
+      }
     }
-  }, [input, isLoading, currentSessionId, sessions]);
+  }, [input, isLoading, currentSessionId, sessions, isMobile]);
 
   const handleTitleEdit = (session: Session) => {
     setEditingId(session.id);

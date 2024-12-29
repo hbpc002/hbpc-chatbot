@@ -53,7 +53,7 @@ const Chat: React.FC = () => {
 
   return (
     <main className={clsx("flex flex-col h-screen", theme.bg)}>
-      <header className={clsx("flex items-center p-4 border-b", theme.border, theme.bg)}>
+      <header className={clsx("flex items-center p-0 border-b", theme.border, theme.bg)}>
         <button
           ref={toggleButtonRef}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
