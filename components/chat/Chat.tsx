@@ -58,7 +58,11 @@ const Chat: React.FC = () => {
         <button
           ref={toggleButtonRef} 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg"
+          className={clsx(
+            "lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg shadow-lg",
+            theme.bg,
+            theme.text
+          )}
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -70,13 +74,13 @@ const Chat: React.FC = () => {
         <aside
           ref={sidebarRef}
           className={clsx(
-            "fixed lg:relative lg:block z-50 bg-white flex flex-col shadow-lg",
+            "fixed lg:relative lg:block z-50 flex flex-col shadow-lg",
             "w-[280px] h-full overflow-y-auto",
             "transition-transform duration-300 ease-in-out",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
             theme.bg,
             theme.text,
-            "border-r border-gray-200/30"
+            theme.border
           )}
         >
           <Sidebar
@@ -94,8 +98,8 @@ const Chat: React.FC = () => {
           />
         </aside>
 
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: theme.bg, color: theme.text }}>
-          <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500 scrollbar-track-transparent">
+        <div className={clsx("flex-1 flex flex-col overflow-hidden", theme.bg, theme.text)}>
+          <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-500 scrollbar-track-transparent">
             {messages.map((message, index) => (
               <ChatMessage 
                 key={index} 

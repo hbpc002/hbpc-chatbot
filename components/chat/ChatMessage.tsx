@@ -80,8 +80,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       className={clsx(
         "mb-4 p-3 rounded-lg",
         message.role === 'user' 
-          ? theme.messageUserBg + " text-gray-800 self-end" 
-          : theme.messageAssistantBg + " text-gray-800 self-start"
+          ? `${theme.messageUserBg} ${theme.text} self-end` 
+          : `${theme.messageAssistantBg} ${theme.text} self-start`
       )}
     >
       <ReactMarkdown 
@@ -92,7 +92,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         {message.content}
       </ReactMarkdown>
       {message.created_at && (
-        <div className="text-xs text-gray-500 mt-1">
+        <div className={clsx("text-xs mt-1", theme.text)}>
           {new Date(message.created_at).toLocaleString()}
         </div>
       )}
